@@ -27,10 +27,6 @@ Page{
             target: container;
             function onDead(){
                 console.log('you die');
-                // snake_container.head_position = Qt.point(snake_container.head_position.x-rect.curent_way.x,snake_container.head_position.y-rect.curent_way.y);
-                // var bod = (snake_body.count>0?snake_body.get(0).way:rect.curent_way);
-                // snake_container.tail_position = Qt.point(snake_container.tail_position.x-bod.x,snake_container.tail_position.y-bod.y);
-                // snake_body.set(0,{cellX: snake_body.get(1).cellX,cellY:snake_body.get(1).cellY});
                 tims.running=false;
                 second.running=false;
                 repaint.running=false;
@@ -40,6 +36,13 @@ Page{
     Item{
         id: container // main_container with some functions
         signal dead();
+
+        function min_max(cord, num1, num2){
+            var min = Math.min(num1, num2);
+            var max = Math.max(num1, num2);
+            if(cord>=min&&cord<=max)return true;
+        }
+
         function check_eq(cordx, cordy){
             // console.log('checked x: '+ cordx+' y: '+cordy);
             var min;
@@ -50,47 +53,53 @@ Page{
             var repeater = 0;
             do{
                 if(cordx === item1.cellX){
-                    min = Math.min(item1.cellY, item2.cellY);
-                    max = Math.max(item1.cellY, item2.cellY);
-                    if(cordy>=min&&cordy<=max)return true;
+                    if(min_max(cordy, item1.cellY, item2.cellY))return true;
+                    // min = Math.min(item1.cellY, item2.cellY);
+                    // max = Math.max(item1.cellY, item2.cellY);
+                    // if(cordy>=min&&cordy<=max)return true;
                 }
                 if(cordy === item1.cellY){
-                    min = Math.min(item1.cellX, item2.cellX);
-                    max = Math.max(item1.cellX, item2.cellX);
-                    if(cordx>=min&&cordx<=max)return true;
+                    if(min_max(cordx, item1.cellX, item2.cellX))return true;
+                    // min = Math.min(item1.cellX, item2.cellX);
+                    // max = Math.max(item1.cellX, item2.cellX);
+                    // if(cordx>=min&&cordx<=max)return true;
                 }
                 item1 = snake_body.get(repeater);
                 item2 = snake_body.get(repeater+1);
-            }while(++repeater<(snake_body.count-1));
+            }while(++repeater<(snake_body.count));
             if(snake_body.count>0){
                 item1 = snake_body.get(snake_body.count-1);
                 item2 = snake_container.head_position;
                 item2 = {cellX:item2.x,cellY:item2.y}
                 if(cordx === item1.cellX){
-                    min = Math.min(item1.cellY, item2.cellY);
-                    max = Math.max(item1.cellY, item2.cellY);
-                    if(cordy>=min&&cordy<=max)return true;
+                    if(min_max(cordy, item1.cellY, item2.cellY))return true;
+                    // min = Math.min(item1.cellY, item2.cellY);
+                    // max = Math.max(item1.cellY, item2.cellY);
+                    // if(cordy>=min&&cordy<=max)return true;
                 }
                 if(cordy === item1.cellY){
-                    min = Math.min(item1.cellX, item2.cellX);
-                    max = Math.max(item1.cellX, item2.cellX);
-                    if(cordx>=min&&cordx<=max)return true;
+                    if(min_max(cordx, item1.cellX, item2.cellX))return true;
+                    // min = Math.min(item1.cellX, item2.cellX);
+                    // max = Math.max(item1.cellX, item2.cellX);
+                    // if(cordx>=min&&cordx<=max)return true;
                 }
             }
-            for(var b=0; b<snake_body.count-1; b++){
-                item1 = snake_body.get(b);
-                item2 = snake_body.get(b+1);
-                if(cordx === item1.cellX){
-                    min = Math.min(item1.cellY, item2.cellY);
-                    max = Math.max(item1.cellY, item2.cellY);
-                    if(cordy>=min&&cordy<=max)return true;
-                }
-                if(cordy === item1.cellY){
-                    min = Math.min(item1.cellX, item2.cellX);
-                    max = Math.max(item1.cellX, item2.cellX);
-                    if(cordx>=min&&cordx<=max)return true;
-                }
-            }
+            // for(var b=0; b<snake_body.count-1; b++){
+            //     item1 = snake_body.get(b);
+            //     item2 = snake_body.get(b+1);
+            //     if(cordx === item1.cellX){
+            //         if(min_max(cordx, item1.cellX, item2.cellX))return true;
+            //         min = Math.min(item1.cellY, item2.cellY);
+            //         max = Math.max(item1.cellY, item2.cellY);
+            //         if(cordy>=min&&cordy<=max)return true;
+            //     }
+            //     if(cordy === item1.cellY){
+            //         if(min_max(cordx, item1.cellX, item2.cellX))return true;
+            //         min = Math.min(item1.cellX, item2.cellX);
+            //         max = Math.max(item1.cellX, item2.cellX);
+            //         if(cordx>=min&&cordx<=max)return true;
+            //     }
+            // }
             for(var t=0; t<food_list.count;t++){
                 var elem = food_list.get(t);
                 if((elem.cellX===cordx) && (elem.cellY===cordy))return true;
@@ -118,13 +127,25 @@ Page{
             id: snake_container;
             property point head_position: Qt.point(Math.floor((field_items.field_width)/2),Math.floor((field_items.field_height)/2))//base head position
             property point tail_position: Qt.point(Math.floor((field_items.field_width)/2),Math.floor((field_items.field_height)/2)-2)//base tail position
+            property point tail_way: Qt.point(0,1);
+            property bool tail_wait: false;
+            property bool food_eaten: false;
+            property int food_index: -1;
+
             property double now: Date.now()-250;
             ListModel{
                 id: snake_body;
             }
             function check_collision(){
                 var head = {cellX:snake_container.head_position.x, cellY:snake_container.head_position.y};
-
+                if(snake_container.food_eaten){
+                    // snake_container.tail_position = Qt.point(snake_container.tail_position.x -bod.x, snake_container.tail_position.y-bod.y);
+                    food_list.remove(snake_container.food_index);
+                    header_menu.score+=1;
+                    food_container.food_generator();
+                    snake_container.food_eaten=false;
+                    snake_container.tail_way = Qt.point(0,0);
+                }
 
                 if(head.cellX > field_items.field_width-1||head.cellX<0|| head.cellY > field_items.field_height-1||head.cellY<0){
                     console.log('boom');
@@ -137,38 +158,34 @@ Page{
                     var item = food_list.get(i);
                     if(snake_container.head_position.x===item.cellX &&snake_container.head_position.y===item.cellY){
                         // console.log('got it');
-                        var bod;
-                        if(snake_body.count>0){
-                            bod = snake_body.get(0).way;
-                        }
-                        else{
-                            bod = rect.curent_way;
-                        }
+                        // var bod;
+                        // if(snake_body.count>0){
+                        //     bod = snake_body.get(0).way;
+                        // }
+                        // else{
+                        //     bod = rect.curent_way;
+                        // }
                         // snake_body.append({cellX: bod.cellX,cellY:bod.cellY, way: rect.curent_way});
-                        snake_container.tail_position = Qt.point(snake_container.tail_position.x -bod.x, snake_container.tail_position.y-bod.y);
-                        food_list.remove(i);
-                        header_menu.score+=1;
-                        food_container.food_generator();
+
+                        snake_container.food_eaten=true;
+                        snake_container.food_index=i;
+                        snake_container.tail_wait=true;
                         // console.log(snake_body.count);
                         return;
                     }
                 }
                 // console.log('body check');
                 if(snake_body.count>2){
-                    // console.log('bodyc '+snake_body.count)
                     var smaller;
                     var bigger
                     var bitem_i = snake_container.tail_position;
                     bitem_i = {cellX:bitem_i.x,cellY:bitem_i.y};
                     var bitem_2i = snake_body.get(0);
-                    // smaller = Math.min(bitem_i.cellX, bitem_2i.cellX);
-                    // bigger = Math.max(bitem_i.cellX, bitem_2i.cellX);
                     var body_check = 0;
                     do{
                         // console.log('check');
                         if(head.cellY===bitem_i.cellY){
                             // console.log('check Y');
-                            // check_area(smaller, bigger);
                             smaller = Math.min(bitem_i.cellX, bitem_2i.cellX);
                             bigger = Math.max(bitem_i.cellX, bitem_2i.cellX);
                             if(head.cellX>=smaller&&head.cellX<=bigger){
@@ -190,51 +207,7 @@ Page{
                         bitem_i = snake_body.get(body_check);
                         bitem_2i = snake_body.get(body_check+1);
                     }while(++body_check<snake_body.count-1);
-
-
-                    /*// for(var body_check = 0; body_check<snake_body.count-2; body_check++){
-                    //     console.log('check');
-                    //     bitem_i = snake_body.get(body_check);
-                    //     bitem_2i = snake_body.get(body_check+1);
-                    //     if(head.cellY===bitem_i.cellY){
-                    //         console.log('check Y');
-                    //         // check_area(smaller, bigger);
-                    //         smaller = Math.min(bitem_i,cellX, bitem_2i.cellX);
-                    //         bigger = Math.max(bitem_i,cellX, bitem_2i.cellX);
-                    //         if(head.cellX>=smaller&&head.cellX<=bigger){
-                    //             console.log('die');
-                    //             container.dead();
-                    //             return;
-                    //         }
-                    //     }
-                    //     if(head.cellX===bitem_i.cellX){
-                    //         console.log('check X');
-                    //         smaller = Math.min(bitem_i,celly, bitem_2i.cellY);
-                    //         bigger = Math.max(bitem_i,cellY, bitem_2i.cellY);
-                    //         if(head.cellY>=smaller&&head.cellY<=bigger){
-                    //             console.log('die');
-                    //             container.dead();
-                    //             return;
-                    //         }
-                    //     }
-                    // }*/
-
                 }
-
-
-                /*// if(snake_body.count>3){ //if
-                //     for(var iter=snake_body.count-1; iter>2; iter--){
-                //         var body = snake_body.get(iter);
-                //         if(body.cellX===head.cellX && body.cellY===head.cellY){
-                //             console.log('boom');
-                //             container.dead();
-                //             return;
-                //         }
-                //     }
-                // }
-                // console.log('end body check');*/
-
-
             }
         }
         Item{//food elements logic
@@ -244,15 +217,18 @@ Page{
                 ListElement{cellX:4; cellY:4}//first food element
             }
             function food_generator(){//generate food
-                if(header_menu.score>90){
+                if(header_menu.score>92){
                     if(food_list.count===0){
                         console.log('you win');
                         tims.running=false;
                         second.running=false;
                     }
+                    console.log('returned')
+                    froot.requestPaint();
                     return;
                 }
                 var position = container.generate_random(field_items.field_width-1); // get random empty position
+                console.log('new point: \nx: '+position.cellX+' \ny: '+position.cellY);
                 // console.log(position.cellX);
                 food_list.append(position); //append coordinates to food_list
                 froot.requestPaint();
@@ -294,24 +270,7 @@ Page{
             }
         }
 
-        /*// GridLayout{
-        //     id: grid;
-        //     columns:  10;
-        //     columnSpacing: 0;
-        //     rowSpacing: 0;
-        //     anchors.centerIn: parent;
-        //     Repeater{
-        //         model: 100;
-        //         Rectangle{
-        //             width:30;
-        //             height: 30;
-        //             property string pcol: ((model.index+Math.floor(model.index/grid.columns))%2==0)?("lightgreen"):("#a0f1c4");
-        //             color:  pcol;
-        //             border.color: "black";
-        //             border.width: 1;
-        //         }
-        //     }
-        // }*/
+
         Canvas{
             id: froot;
             anchors.fill: parent;
@@ -329,17 +288,7 @@ Page{
                 ctx.restore();
             }
         }
-        /*// Repeater{
-        //     model: food_list;
-        //     delegate: Rectangle{
-        //         color: "red";
-        //         width: 30;
-        //         height: 30;
-        //         radius: 20;
-        //         x: model.cellX*30;
-        //         y: model.cellY*30;
-        //     }
-        // }*/
+
         Rectangle{
             focus: true;
             id: rect;
@@ -348,35 +297,13 @@ Page{
             opacity: 0;
             x: snake_container.head_position.x*30;
             y: snake_container.head_position.y*30;
-            z:1;
-            // Behavior on x{
-            //     NumberAnimation{
-            //         duration: 250;
-            //         easing.type: Easing.Linear;
-            //     }
-            // }
-            // Behavior on y{
-            //     NumberAnimation{
-            //         duration: 250;
-            //         easing.type: Easing.Linear;
-            //     }
-            // }
             visible: true;
-            // radius: 20;
             color: "#1203F0";
             property point way: Qt.point(0,1);
             property point curent_way: Qt.point(0,1);
             property int base: 16777234;
             property int index: 3;
 
-            // transformOrigin: Item.Center;
-            // rotation: (((rect.curent_way.y===-1)?(1):(0))*180)-(rect.curent_way.x*90)
-            // Rectangle{
-            //     anchors.top: parent.top;
-            //     width: parent.width;
-            //     height: 15;
-            //     color: parent.color;
-            // }
             function set_way(){
                 if(rect.curent_way===rect.way)return;
                 if(rect.curent_way.x===(rect.way.y*(-1)) && rect.curent_way.y===rect.way.x){
@@ -389,29 +316,25 @@ Page{
             }
             function move(){
                 rect.set_way();
-                // var item;
-
-                if(snake_body.count>0){
-                    console.log(snake_body.count);
-                    var last = snake_body.get(0);
-                    snake_container.tail_position = Qt.point(snake_container.tail_position.x+last.way.x,snake_container.tail_position.y+last.way.y)
-                    if(snake_container.tail_position.x === last.cellX && snake_container.tail_position.y === last.cellY){
-                        snake_body.remove(0);
+                if(!snake_container.tail_wait){
+                    if(snake_body.count>0){
+                        // console.log(snake_body.count);
+                        var last = snake_body.get(0);
+                        snake_container.tail_way=last.way;
+                        // snake_container.tail_position = Qt.point(snake_container.tail_position.x+last.way.x,snake_container.tail_position.y+last.way.y)
+                        if(snake_container.tail_position.x+snake_container.tail_way.x === last.cellX && snake_container.tail_position.y+snake_container.tail_way.y === last.cellY){
+                            snake_body.remove(0);
+                        }
                     }
+                    else{
+                        // snake_container.tail_position = Qt.point(snake_container.tail_position.x+rect.curent_way.x,snake_container.tail_position.y+rect.curent_way.y);
+                        snake_container.tail_way = rect.curent_way;
+                    }
+                    snake_container.tail_position = Qt.point(snake_container.tail_position.x+snake_container.tail_way.x,snake_container.tail_position.y+snake_container.tail_way.y);
                 }
-                else{
-                    snake_container.tail_position = Qt.point(snake_container.tail_position.x+rect.curent_way.x,snake_container.tail_position.y+rect.curent_way.y);
-                }
-                console.log(snake_container.tail_position.x + ' ' + snake_container.tail_position.y);
-                // for(var i=snake_body.count-1; i>0;i--){
-                //     snake_body.set(i,{cellX:snake_body.get(i-1).cellX,cellY:snake_body.get(i-1).cellY});
-                //     // console.log(item);
-                // }
-                // snake_body.set(0, {cellX:snake_container.head_position.x,cellY:snake_container.head_position.y});
-                // item = {cellX:item.cellX+rect.curent_way.x,cellY:item.cellY+rect.curent_way.y}
                 snake_container.head_position = Qt.point(snake_container.head_position.x+rect.curent_way.x,snake_container.head_position.y+rect.curent_way.y)
                 snake_container.now = Date.now();
-                // body.requestPaint();
+                snake_container.tail_wait = false;
                 snake_container.check_collision();
             }
             Keys.onPressed: (event)=>{
@@ -421,10 +344,6 @@ Page{
                     rect.way = Qt.point(rect.curent_way.y, rect.curent_way.x*(-1));
                 }else if(event.key === Qt.Key_1){
                     rect.move();
-                    // console.log(rect.x+' '+rect.y);
-                    // console.log(rect.rotation);
-                    // console.log(((rect.curent_way.y===-1)?(1):(0)*180)-(rect.curent_way.x*90));
-                    // main_container.boxStumb();
                 }else if(event.key === Qt.Key_2){
                     tims.running = true;
                     second.running=true;
@@ -451,58 +370,36 @@ Page{
                 ctx.fillStyle = 'blue';
                 // console.log('paint');
                 ctx.strokeStyle = 'blue';
-                ctx.lineWidth = size*0.75;
+                ctx.lineWidth = size*0.70;
                 ctx.lineCap = 'round';
                 ctx.lineJoin='round';
 
                 var head = snake_container.head_position;
                 var befp = Qt.point(head.x - rect.curent_way.x, head.y - rect.curent_way.y);
-                // console.log(befp.x+' '+befp.y);
-                var animt = Date.now() - snake_container.now;
-                var prg = Math.min(1.0, animt/250);
-                // console.log(prg);
-                var newX = befp.x + (head.x-befp.x)*prg;
-                var newY = befp.y + (head.y-befp.y)*prg;
+                var prg = Math.min(1.0, (Date.now() - snake_container.now)/250);
+                var newX = befp.x + (rect.curent_way.x)*prg;
+                var newY = befp.y + (rect.curent_way.y)*prg;
 
 
                 var tail = snake_container.tail_position;
-                head = (snake_body.count>0?(snake_body.get(0).way):(rect.curent_way));
-                befp = Qt.point(tail.x + head.x, tail.y + head.y);
-                // head = Qt.point(newX, newY);
-                // console.log(newX+' '+newY);
-
+                var tail_way= snake_container.tail_way;
                 ctx.beginPath();
                 ctx.moveTo(newX*size+15,newY*size+15);
-                newX = tail.x+ (befp.x-tail.x)*prg;
-                newY = tail.y+ (befp.y-tail.y)*prg;
+                newX = tail.x-tail_way.x*(1-prg);
+                newY = tail.y-tail_way.y*(1-prg);
                 for(var i=snake_body.count-1; i>-1; i--){
                     var point = snake_body.get(i);
                     ctx.lineTo(point.cellX*size+15,point.cellY*size+15)
                 }
-                ctx.lineTo(newX*size+15,newY*size+15);
-
-                ctx.stroke();
-
-                // for(var i=0; i<snake_body.count; i++){
-                //     var item = snake_body.get(i);
-                //     ctx.fillRect(item.cellX*size,item.cellY*size,size,size);
+                ctx.lineTo(tail.x*size+15,tail.y*size+15)
+                // if(!snake_container.food_eaten){
+                    console.log('x: '+newX+' Y: '+newY)
+                    ctx.lineTo(newX*size+15,newY*size+15);
                 // }
+                ctx.stroke();
                 ctx.restore();
             }
         }
-        /*// Repeater{
-        //     id:body_rect
-        //     model: snake_body;
-        //     delegate: Rectangle{
-        //         id: rt;
-        //         property bool last: (model.index === snake_body.count-1)||(model.index===0);
-        //         color:"blue";
-        //         width:30;
-        //         height: 30;
-        //         x: model.cellX*30;
-        //         y:model.cellY*30;
-        //     }
-        // }*/
         }
 
         Timer{
@@ -533,14 +430,10 @@ Page{
             }
         }
         Component.onCompleted: {
-            // snake_body.append({cellX:Math.floor((field_items.field_width)/2),cellY:Math.floor((field_items.field_height)/2)-1});
-            // snake_body.append({cellX:Math.floor((field_items.field_width)/2),cellY:Math.floor((field_items.field_height)/2)-2});
             for(var t=0; t<5;t++){
                 food_container.food_generator();
             }
-            console.log(food_list.count);
-            // console.log(field_items.cont.length);
-            // rect.setBasePosition();
+            // console.log(food_list.count);
         }
     }
 }
