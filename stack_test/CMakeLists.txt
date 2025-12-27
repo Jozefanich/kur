@@ -19,8 +19,10 @@ qt_add_qml_module(appstack_test
         Main.qml
         SreenList.qml
         SScr.qml
-        food_model.qml
         Add_box.qml
+    RESOURCES
+        game_logic.js
+        canvas_logic.js
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

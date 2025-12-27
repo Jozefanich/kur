@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>game_logic.js</file>
+    </qresource>
+</RCC>

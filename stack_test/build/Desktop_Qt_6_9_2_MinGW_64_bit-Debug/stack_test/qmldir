@@ -1,0 +1,9 @@
+module stack_test
+typeinfo appstack_test.qmltypes
+prefer :/qt/qml/stack_test/
+Main 1.0 Main.qml
+SreenList 1.0 SreenList.qml
+SScr 1.0 SScr.qml
+Add_box 1.0 Add_box.qml
+depends QtQuick
+
